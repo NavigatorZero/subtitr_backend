@@ -1,18 +1,19 @@
 import {
-  Controller,
+  Controller, createParamDecorator, Get, Header,
   HttpException,
-  HttpStatus,
-  Post,
+  HttpStatus, Param,
+  Post, Res, StreamableFile,
   UploadedFile,
   UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { existsSync, mkdirSync } from 'node:fs';
-import { extname } from 'node:path';
-import { v4 as uuid } from 'uuid';
-import { PythonRunnerService } from '../../services/python-runner.service';
+  UseInterceptors
+} from "@nestjs/common";
+import { FilesInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { createReadStream, existsSync, mkdirSync } from "node:fs";
+import { extname, join } from "node:path";
+import { v4 as uuid } from "uuid";
+import { PythonRunnerService } from "../../services/python-runner.service";
+import type { Response } from "express";
 
 export const multerOptions = {
   // Enable file size limits
@@ -71,11 +72,23 @@ export class TranslateVideoController {
       setTimeout(() => {
         this.pythonRunnerService.call(
           file.path,
-          `/Users/skyeng/projects/subtitr/subtitr_backend/static/with-subs/${file.filename}`,
+          `/root/subtitr/subtitr_backend/static/with-subs/${file.filename}`,
         );
       }, 5000);
       response.push(fileReponse);
     });
     return response;
+  }
+
+  @Get(':id')
+  getFile(@Param() params: any,@Res({ passthrough: true }) res: Response): StreamableFile {
+    const file = createReadStream(
+      `/root/subtitr/subtitr_backend/static/with-subs/${params.id}.mp4`,
+    );
+    res.set({
+      'Content-Type': 'video/mp4',
+      'Content-Disposition': 'attachment; filename="package.mp4"',
+    });
+    return new StreamableFile(file);
   }
 }

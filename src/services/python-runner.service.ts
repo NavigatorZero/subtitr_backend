@@ -7,8 +7,8 @@ export class PythonRunnerService {
   call(inputFile, outputFile) {
     console.log(inputFile, outputFile);
 
-    PythonShell.run('/Users/skyeng/projects/whisper/gen/main.py', {
-      pythonPath: '/usr/local/bin/python3.12',
+    PythonShell.run('/root/subtitr/subtitr_backend/src/generation/main.py', {
+      pythonPath: '/usr/bin/python3',
       pythonOptions: ['-u'],
       args: [inputFile, outputFile],
     }).then((messages) => {

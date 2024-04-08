@@ -8,7 +8,9 @@ import cv2
 from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 import ssl
+from PIL import ImageFile
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 ssl._create_default_https_context = ssl._create_unverified_context
 model_path = "medium"
 video_path = "/Users/skyeng/projects/whisper/gen/test.mp4"
@@ -84,7 +86,8 @@ class VideoTranscriber:
 
     def extract_audio(self):
         print('Extracting audio')
-        audio_path = os.path.join(os.path.dirname(self.video_path), "audio.mp3")
+        audio_path = "audio.mp3"
+        print(audio_path)
         video = VideoFileClip(self.video_path)
         audio = video.audio
         audio.write_audiofile(audio_path)
@@ -110,7 +113,7 @@ class VideoTranscriber:
                 if N_frames >= i[1] and N_frames <= i[2]:
                     text = i[0]
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                    text_x = int((frame.shape[1] - text_size[0]) / 2)
+                    text_x = int((width - (text_size[0] / 2) ) / 2)
                     text_y = int(height / 2)
                     cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 0, 255), 2)
                     break
@@ -122,6 +125,7 @@ class VideoTranscriber:
         print('Frames extracted')
 
     def create_video(self, output_video_path):
+
         print('Creating video')
         image_folder = os.path.join(os.path.dirname(self.video_path), "frames")
         if not os.path.exists(image_folder):
@@ -140,7 +144,7 @@ class VideoTranscriber:
         clip = clip.set_audio(audio)
         clip.write_videofile(output_video_path)
         shutil.rmtree(image_folder)
-        os.remove(os.path.join(os.path.dirname(self.video_path), "audio.mp3"))
+        os.remove( "audio.mp3")
 
 
 def ProcessVideo():
@@ -154,7 +158,7 @@ def ProcessVideo():
 
         transcriber.create_video(output_video_path)
         processing = False
-        process.current_process().terminate()
+        exit()
 
 
 def StartVideoProcess():
