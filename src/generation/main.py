@@ -1,5 +1,6 @@
 import sys
-from multiprocessing import process
+import multiprocessing
+import traceback
 
 import whisper
 import os
@@ -8,7 +9,7 @@ import cv2
 from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 import ssl
-from PIL import ImageFile
+from PIL import ImageFile, Image
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -19,6 +20,7 @@ output_video_path = "/Users/skyeng/projects/whisper/gen/output.mp4"
 FONT = cv2.FONT_HERSHEY_COMPLEX
 FONT_SCALE = 0.8
 FONT_THICKNESS = 2
+
 
 class VideoTranscriber:
     def __init__(self, model_path, video_path):
@@ -105,6 +107,7 @@ class VideoTranscriber:
         while True:
             ret, frame = cap.read()
             if not ret:
+                print('error');
                 break
 
             frame = frame[:, int(int(width - 1 / asp * height) / 2):width - int((width - 1 / asp * height) / 2)]
@@ -113,7 +116,7 @@ class VideoTranscriber:
                 if N_frames >= i[1] and N_frames <= i[2]:
                     text = i[0]
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                    text_x = int((width - (text_size[0] / 2) ) / 2)
+                    text_x = int((width - (text_size[0] / 2)) / 2)
                     text_y = int(height / 2)
                     cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 0, 255), 2)
                     break
@@ -139,12 +142,21 @@ class VideoTranscriber:
         frame = cv2.imread(os.path.join(image_folder, images[0]))
         height, width, layers = frame.shape
 
-        clip = ImageSequenceClip([os.path.join(image_folder, image) for image in images], fps=self.fps)
-        audio = AudioFileClip(self.audio_path)
-        clip = clip.set_audio(audio)
-        clip.write_videofile(output_video_path)
-        shutil.rmtree(image_folder)
-        os.remove( "audio.mp3")
+        try:
+            clip = ImageSequenceClip([os.path.join(image_folder, image) for image in images], fps=self.fps)
+            audio = AudioFileClip(self.audio_path)
+            clip = clip.set_audio(audio)
+            ThreadCount = multiprocessing.cpu_count()
+            clip.write_videofile(output_video_path,
+                                 codec='libx264',
+                                 audio_codec='aac',
+                                 remove_temp=True,
+                                 threads=ThreadCount
+                                 )
+            # shutil.rmtree(image_folder)
+            # os.remove("audio.mp3")
+        except Exception as e:
+            print(e)
 
 
 def ProcessVideo():
