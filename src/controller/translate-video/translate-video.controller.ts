@@ -5,15 +5,16 @@ import {
   Post, Res, StreamableFile,
   UploadedFile,
   UploadedFiles,
-  UseInterceptors
-} from "@nestjs/common";
-import { FilesInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { createReadStream, existsSync, mkdirSync } from "node:fs";
-import { extname, join } from "node:path";
-import { v4 as uuid } from "uuid";
-import { PythonRunnerService } from "../../services/python-runner.service";
-import type { Response } from "express";
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { createReadStream, existsSync, mkdirSync } from 'node:fs';
+import { extname, join } from 'node:path';
+import { v4 as uuid } from 'uuid';
+import { PythonRunnerService } from '../../services/python-runner.service';
+import type { Response } from 'express';
+import * as fs from 'fs';
 
 export const multerOptions = {
   // Enable file size limits
@@ -58,37 +59,46 @@ export const multerOptions = {
 
 @Controller('translate-video')
 export class TranslateVideoController {
-  constructor(private pythonRunnerService: PythonRunnerService) {}
-
+  constructor(private pythonRunnerService: PythonRunnerService) {
+  }
   @Post('upload')
   @UseInterceptors(FilesInterceptor('file', 20, multerOptions))
   uploadMultipleFiles(@UploadedFiles() files) {
-    console.log(files);
     const response = [];
     files.forEach((file) => {
       const fileReponse = {
         filename: file.filename,
       };
-      setTimeout(() => {
-        this.pythonRunnerService.call(
-          file.path,
-          `/root/subtitr/subtitr_backend/static/with-subs/${file.filename}`,
-        );
-      }, 5000);
+      this.pythonRunnerService.call(
+        file.path,
+        `${process.cwd()}/static/with-subs/${file.filename}`,
+      );
       response.push(fileReponse);
     });
     return response;
   }
 
   @Get(':id')
-  getFile(@Param() params: any,@Res({ passthrough: true }) res: Response): StreamableFile {
+  getFile(
+    @Param() params: any,
+    @Res({ passthrough: true }) res: Response,
+  ): StreamableFile {
     const file = createReadStream(
-      `/root/subtitr/subtitr_backend/static/with-subs/${params.id}.mp4`,
+      `${process.cwd()}/static/with-subs/${params.id}.mp4`,
     );
     res.set({
       'Content-Type': 'video/mp4',
       'Content-Disposition': 'attachment; filename="package.mp4"',
     });
     return new StreamableFile(file);
+  }
+
+  @Get('list/all')
+  getFileList(): string[] {
+    const fileUUIDs: string[] = [];
+    fs.readdirSync(`${process.cwd()}/static/with-subs`).forEach((file) => {
+      fileUUIDs.push(file.replace(/\.[^/.]+$/, ''));
+    });
+    return fileUUIDs;
   }
 }

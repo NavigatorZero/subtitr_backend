@@ -153,8 +153,8 @@ class VideoTranscriber:
                                  remove_temp=True,
                                  threads=ThreadCount
                                  )
-            # shutil.rmtree(image_folder)
-            # os.remove("audio.mp3")
+            shutil.rmtree(image_folder)
+            os.remove("audio.mp3")
         except Exception as e:
             print(e)
 

@@ -7,12 +7,12 @@ export class PythonRunnerService {
   call(inputFile, outputFile) {
     console.log(inputFile, outputFile);
 
-    PythonShell.run('/root/subtitr/subtitr_backend/src/generation/main.py', {
+    PythonShell.run(`${process.cwd()}/src/generation/main.py`, {
       pythonPath: '/usr/bin/python3',
       pythonOptions: ['-u'],
       args: [inputFile, outputFile],
     }).then((messages) => {
-      console.log('finished');
+      console.log('finished', messages);
     });
 
     // shell.exec(
