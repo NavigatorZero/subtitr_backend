@@ -10,6 +10,7 @@ from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 import ssl
 from PIL import ImageFile, Image
+import uuid
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -30,6 +31,7 @@ class VideoTranscriber:
         self.text_array = []
         self.fps = 0
         self.char_width = 0
+        self.uuid = uuid.uuid4().hex
 
     def transcribe_video(self):
         print('Transcribing video')
@@ -88,7 +90,7 @@ class VideoTranscriber:
 
     def extract_audio(self):
         print('Extracting audio')
-        audio_path = "audio.mp3"
+        audio_path = "audio" + self.uuid + ".mp3"
         print(audio_path)
         video = VideoFileClip(self.video_path)
         audio = video.audio
@@ -130,7 +132,7 @@ class VideoTranscriber:
     def create_video(self, output_video_path):
 
         print('Creating video')
-        image_folder = os.path.join(os.path.dirname(self.video_path), "frames")
+        image_folder = os.path.join(os.path.dirname(self.video_path), "frames" + self.uuid)
         if not os.path.exists(image_folder):
             os.makedirs(image_folder)
 
@@ -154,7 +156,7 @@ class VideoTranscriber:
                                  threads=ThreadCount
                                  )
             shutil.rmtree(image_folder)
-            os.remove("audio.mp3")
+            os.remove("audio" + self.uuid + ".mp3")
         except Exception as e:
             print(e)
 

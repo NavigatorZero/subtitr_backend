@@ -8,15 +8,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage} from "multer";
 import { createReadStream, existsSync, mkdirSync } from 'node:fs';
-import { extname, join } from 'node:path';
+import { v4 as uuidv4, v6 as uuidv6 } from 'uuid';
 import { v4 as uuid } from 'uuid';
 import { PythonRunnerService } from '../../services/python-runner.service';
 import type { Response } from 'express';
 import * as fs from 'fs';
+import { VideoService } from "../../entites/video/video.service";
+import { VideoEntity } from "../../entites/video/video.entity";
+import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
 
-export const multerOptions = {
+export const multerOptions: MulterOptions = {
   // Enable file size limits
   limits: {
     fileSize: 3000000000000000,
@@ -49,32 +52,33 @@ export const multerOptions = {
       }
       cb(null, uploadPath);
     },
-    // File modification details
-    filename: (req: any, file: any, cb: any) => {
-      // Calling the callback passing the random name generated with the original extension name
-      cb(null, `${uuid()}${extname(file.originalname)}`);
-    },
   }),
 };
 
 @Controller('translate-video')
 export class TranslateVideoController {
-  constructor(private pythonRunnerService: PythonRunnerService) {
-  }
+  constructor(
+    private pythonRunnerService: PythonRunnerService,
+    private videoService: VideoService,
+  ) {}
   @Post('upload')
   @UseInterceptors(FilesInterceptor('file', 20, multerOptions))
-  uploadMultipleFiles(@UploadedFiles() files) {
+  async uploadMultipleFiles(
+    @UploadedFiles() files,
+  ): Promise<Array<VideoEntity>> {
     const response = [];
-    files.forEach((file) => {
-      const fileReponse = {
-        filename: file.filename,
-      };
-      this.pythonRunnerService.call(
-        file.path,
-        `${process.cwd()}/static/with-subs/${file.filename}`,
-      );
-      response.push(fileReponse);
-    });
+    for (const file of files) {
+      console.log(file);
+      const videoEntity = await this.videoService.insert({
+        name: file.filename,
+        path: file.path,
+        path_new: `${process.cwd()}/static/with-subs/${file.filename}`,
+        uuid: uuidv4(),
+      });
+
+      this.pythonRunnerService.call(videoEntity.path, videoEntity.path_new);
+      response.push(videoEntity);
+    }
     return response;
   }
 
@@ -94,11 +98,7 @@ export class TranslateVideoController {
   }
 
   @Get('list/all')
-  getFileList(): string[] {
-    const fileUUIDs: string[] = [];
-    fs.readdirSync(`${process.cwd()}/static/with-subs`).forEach((file) => {
-      fileUUIDs.push(file.replace(/\.[^/.]+$/, ''));
-    });
-    return fileUUIDs;
+  async getFileList(): Promise<VideoEntity[]> {
+    return await this.videoService.findAll();
   }
 }
