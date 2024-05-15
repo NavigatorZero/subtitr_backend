@@ -1,6 +1,8 @@
 import sys
 import multiprocessing
 import traceback
+import math
+from enums import Position, Fonts, ModelSize
 
 import whisper
 import os
@@ -9,14 +11,17 @@ import cv2
 from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 import ssl
-from PIL import ImageFile, Image
+from PIL import ImageFile, Image, ImageFont, ImageDraw
+import numpy as np
 import uuid
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ssl._create_default_https_context = ssl._create_unverified_context
 model_path = "medium"
-video_path = "/Users/skyeng/projects/whisper/gen/test.mp4"
-output_video_path = "/Users/skyeng/projects/whisper/gen/output.mp4"
+video_path = ""
+output_video_path = ""
+position = ''
+font = ''
 
 FONT = cv2.FONT_HERSHEY_COMPLEX
 FONT_SCALE = 0.8
@@ -41,7 +46,7 @@ class VideoTranscriber:
         cap = cv2.VideoCapture(self.video_path)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        asp = 16 / 9
+        asp = calculate_aspect(width, height)
         ret, frame = cap.read()
         width = frame[:, int(int(width - 1 / asp * height) / 2):width - int((width - 1 / asp * height) / 2)].shape[1]
         width = width - (width * 0.1)
@@ -82,7 +87,6 @@ class VideoTranscriber:
                 line_array = [line, int(start) + 15, int(len(line) / total_chars * total_frames) + int(start) + 15]
                 start = int(len(line) / total_chars * total_frames) + int(start)
                 lines.append(line_array)
-                print(line_array)
                 self.text_array.append(line_array)
 
         cap.release()
@@ -103,8 +107,12 @@ class VideoTranscriber:
         cap = cv2.VideoCapture(self.video_path)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        asp = width / height
+        asp = calculate_aspect(width, height)
         N_frames = 0
+        p = lambda x : x/100
+        text = '';
+        text_x = 0;
+        text_y = 0
 
         while True:
             ret, frame = cap.read()
@@ -118,12 +126,28 @@ class VideoTranscriber:
                 if N_frames >= i[1] and N_frames <= i[2]:
                     text = i[0]
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                    text_x = int((width - (text_size[0] / 2)) / 2)
-                    text_y = int(height / 2)
-                    cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 0, 255), 2)
-                    break
+                    text_x = int(width / 2 - text_size[0] / 2)
+                    
+                    if position == 'center':
+                        text_y = int(height / 2)
+                        
+                    if position == 'top':
+                        text_y = int(height - height * p(80))
+                    
+                    if position == 'bottom':
+                        text_y = int(height - height * p(20))    
 
+                    # cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 0, 255), 2)
+                
+                    break
             cv2.imwrite(os.path.join(output_folder, str(N_frames) + ".jpg"), frame)
+            write_with_font(
+                    text_x,
+                    text_y,
+                    text,
+                    os.path.join(output_folder, str(N_frames) + ".jpg"),
+                    os.path.join(output_folder, str(N_frames) + ".jpg")
+                        )               
             N_frames += 1
 
         cap.release()
@@ -181,13 +205,49 @@ def StartVideoProcess():
     ProcessVideo()
 
 
+def calculate_aspect(width: int, height: int) -> int:
+    r = math.gcd(width, height)
+    x = int(width / r)
+    y = int(height / r)
+    return x / y
+
+
+def write_with_font(
+    x,
+    y,
+    text,
+    inputImg,
+    outupImg,
+):
+    # Open image with OpenCV
+    im_o = cv2.imread(inputImg)
+
+    # Make into PIL Image
+    im_p = Image.fromarray(im_o)
+
+    # Get a drawing context
+    draw = ImageDraw.Draw(im_p)
+    monospace = ImageFont.truetype(font,18)
+    
+    ascent, descent = monospace.getmetrics()
+    (width, height), (offset_x, offset_y) = monospace.font.getsize(text)
+    
+    draw.text((x + width / 2, y),text,(255,255,255),font=monospace)
+
+    # Convert back to OpenCV image and save
+    result_o = np.array(im_p)
+    cv2.imwrite(outupImg, result_o)
+    
+
 def main():
-    global video_path, output_video_path
-    print(sys.argv)
+    global video_path, output_video_path, model_path, position, font
     video_path = sys.argv[1]
     output_video_path = sys.argv[2]
-    StartVideoProcess()
+    model_path = ModelSize.get(sys.argv[3], 'tiny')
+    position = Position.get(sys.argv[4], 'top')
+    font = Fonts.get(sys.argv[5], 'arial')
 
+    StartVideoProcess()
 
 if __name__ == "__main__":
     main()

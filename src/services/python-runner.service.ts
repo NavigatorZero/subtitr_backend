@@ -4,13 +4,12 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PythonRunnerService {
-  call(inputFile, outputFile) {
-    console.log(inputFile, outputFile);
+  call(inputFile, outputFile, speed, position, font) {
 
     PythonShell.run(`${process.cwd()}/src/generation/main.py`, {
       pythonPath: '/usr/bin/python3',
       pythonOptions: ['-u'],
-      args: [inputFile, outputFile],
+      args: [inputFile, outputFile, speed, position, font],
     }).then((messages) => {
       console.log('finished', messages);
     });

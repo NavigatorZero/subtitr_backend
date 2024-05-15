@@ -12,6 +12,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
-  await app.listen(3003);
+  await app.listen(3000);
 }
 bootstrap();

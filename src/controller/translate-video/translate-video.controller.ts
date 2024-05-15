@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller, createParamDecorator, Get, Header,
   HttpException,
   HttpStatus, Param,
@@ -26,7 +27,7 @@ export const multerOptions: MulterOptions = {
   },
   // Check the mimetypes to allow for upload
   fileFilter: (req: any, file: any, cb: any) => {
-    if (file.mimetype.match(/\/(mp4|jpeg|png|gif)$/)) {
+    if (file.mimetype.match(/\/(mp4|MOV|mov)$/)) {
       // Allow storage of file
       cb(null, true);
     } else {
@@ -65,34 +66,37 @@ export class TranslateVideoController {
   @UseInterceptors(FilesInterceptor('file', 20, multerOptions))
   async uploadMultipleFiles(
     @UploadedFiles() files,
+    @Body() body
   ): Promise<Array<VideoEntity>> {
+    console.log(files);
     const response = [];
     for (const file of files) {
-      console.log(file);
       const videoEntity = await this.videoService.insert({
-        name: file.filename,
+        name: file.originalname,
         path: file.path,
-        path_new: `${process.cwd()}/static/with-subs/${file.filename}`,
+        path_new: `${process.cwd()}/static/with-subs/${file.filename}.mp4`,
         uuid: uuidv4(),
       });
 
-      this.pythonRunnerService.call(videoEntity.path, videoEntity.path_new);
+      this.pythonRunnerService.call(videoEntity.path, videoEntity.path_new, body.speed, body.position, body.font);
       response.push(videoEntity);
     }
     return response;
   }
 
   @Get(':id')
-  getFile(
+  async getFile(
     @Param() params: any,
     @Res({ passthrough: true }) res: Response,
-  ): StreamableFile {
+  ): Promise<StreamableFile> {
+
+    const video = await this.videoService.findOne(params.id);
     const file = createReadStream(
-      `${process.cwd()}/static/with-subs/${params.id}.mp4`,
+      `${video.path_new}`,
     );
     res.set({
       'Content-Type': 'video/mp4',
-      'Content-Disposition': 'attachment; filename="package.mp4"',
+      'Content-Disposition': `attachment; filename="${video.name}"`,
     });
     return new StreamableFile(file);
   }
