@@ -1,24 +1,24 @@
 import {
   Body,
-  Controller, createParamDecorator, Get, Header,
+  Controller, Get, 
   HttpException,
   HttpStatus, Param,
+  ParseIntPipe,
   Post, Res, StreamableFile,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage} from "multer";
 import { createReadStream, existsSync, mkdirSync } from 'node:fs';
-import { v4 as uuidv4, v6 as uuidv6 } from 'uuid';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { PythonRunnerService } from '../../services/python-runner.service';
 import type { Response } from 'express';
-import * as fs from 'fs';
 import { VideoService } from "../../entites/video/video.service";
 import { VideoEntity } from "../../entites/video/video.entity";
 import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
+import { UserService } from 'src/entites/user/user.service';
+const { placeOrder } = require('../../services/queue.service');
 
 export const multerOptions: MulterOptions = {
   // Enable file size limits
@@ -27,7 +27,7 @@ export const multerOptions: MulterOptions = {
   },
   // Check the mimetypes to allow for upload
   fileFilter: (req: any, file: any, cb: any) => {
-    if (file.mimetype.match(/\/(mp4|MOV|mov)$/)) {
+    if (file.mimetype.match(/\/(mp4|quicktime|mov)$/)) {
       // Allow storage of file
       cb(null, true);
     } else {
@@ -61,6 +61,7 @@ export class TranslateVideoController {
   constructor(
     private pythonRunnerService: PythonRunnerService,
     private videoService: VideoService,
+    private userService: UserService,
   ) {}
   @Post('upload')
   @UseInterceptors(FilesInterceptor('file', 20, multerOptions))
@@ -68,7 +69,6 @@ export class TranslateVideoController {
     @UploadedFiles() files,
     @Body() body
   ): Promise<Array<VideoEntity>> {
-    console.log(files);
     const response = [];
     for (const file of files) {
       const videoEntity = await this.videoService.insert({
@@ -76,9 +76,17 @@ export class TranslateVideoController {
         path: file.path,
         path_new: `${process.cwd()}/static/with-subs/${file.filename}.mp4`,
         uuid: uuidv4(),
+        user: await this.userService.findOne(body.userId)
       });
+      
+      placeOrder({
+        inputFile:videoEntity.path,
+        outputFile: videoEntity.path_new,
+        speed: body.speed,
+        position: body.position,
+        font: body.font
+      })
 
-      this.pythonRunnerService.call(videoEntity.path, videoEntity.path_new, body.speed, body.position, body.font);
       response.push(videoEntity);
     }
     return response;
@@ -101,8 +109,8 @@ export class TranslateVideoController {
     return new StreamableFile(file);
   }
 
-  @Get('list/all')
-  async getFileList(): Promise<VideoEntity[]> {
-    return await this.videoService.findAll();
+  @Get('list/:userId/all')
+  async getFileList(@Param('userId', new ParseIntPipe()) userId): Promise<VideoEntity[]> {
+    return await this.videoService.findByUserId(userId);
   }
 }

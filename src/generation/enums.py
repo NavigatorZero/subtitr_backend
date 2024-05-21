@@ -1,4 +1,3 @@
-
 Position = {
     "top": "top",
     "middle": "middle",
@@ -15,7 +14,7 @@ ModelSize = {
         
 Fonts = {
     "arial": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/arialmt.ttf",
-    "bebas": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/BebasNeue-Regular.ttf",
+    "bebas": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/Bebas_cirillic.ttf",
     "futura": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/futuramdbt_bold.otf",
 }
     

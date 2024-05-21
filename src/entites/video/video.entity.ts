@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from '../user/user.entity';
 
 @Entity({})
 export class VideoEntity {
@@ -16,4 +17,7 @@ export class VideoEntity {
 
   @Column({ type: 'varchar' })
   uuid: boolean;
+
+  @ManyToOne(() => UserEntity, (user) => user.videos, {nullable: false})
+  user: UserEntity
 }

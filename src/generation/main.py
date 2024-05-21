@@ -86,6 +86,7 @@ class VideoTranscriber:
 
                 line_array = [line, int(start) + 15, int(len(line) / total_chars * total_frames) + int(start) + 15]
                 start = int(len(line) / total_chars * total_frames) + int(start)
+                print(line_array)
                 lines.append(line_array)
                 self.text_array.append(line_array)
 
@@ -110,8 +111,8 @@ class VideoTranscriber:
         asp = calculate_aspect(width, height)
         N_frames = 0
         p = lambda x : x/100
-        text = '';
-        text_x = 0;
+        text = ''
+        text_x = 0
         text_y = 0
 
         while True:
@@ -126,9 +127,9 @@ class VideoTranscriber:
                 if N_frames >= i[1] and N_frames <= i[2]:
                     text = i[0]
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                    text_x = int(width / 2 - text_size[0] / 2)
+                    text_x = int(width / 2)
                     
-                    if position == 'center':
+                    if position == Position.get('middle'):
                         text_y = int(height / 2)
                         
                     if position == 'top':
@@ -147,7 +148,8 @@ class VideoTranscriber:
                     text,
                     os.path.join(output_folder, str(N_frames) + ".jpg"),
                     os.path.join(output_folder, str(N_frames) + ".jpg")
-                        )               
+                    )
+                           
             N_frames += 1
 
         cap.release()
@@ -184,7 +186,6 @@ class VideoTranscriber:
         except Exception as e:
             print(e)
 
-
 def ProcessVideo():
     global processing
     if video_path != "":
@@ -197,7 +198,6 @@ def ProcessVideo():
         transcriber.create_video(output_video_path)
         processing = False
         exit()
-
 
 def StartVideoProcess():
     global processing
@@ -227,12 +227,12 @@ def write_with_font(
 
     # Get a drawing context
     draw = ImageDraw.Draw(im_p)
-    monospace = ImageFont.truetype(font,18)
+    monospace = ImageFont.truetype(font, 18, encoding='utf-8')
     
     ascent, descent = monospace.getmetrics()
     (width, height), (offset_x, offset_y) = monospace.font.getsize(text)
     
-    draw.text((x + width / 2, y),text,(255,255,255),font=monospace)
+    draw.text((x - width / 2, y), text, (255,255,255), font=monospace)
 
     # Convert back to OpenCV image and save
     result_o = np.array(im_p)

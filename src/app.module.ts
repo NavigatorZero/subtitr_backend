@@ -3,18 +3,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TranslateVideoController } from './controller/translate-video/translate-video.controller';
 import { PythonRunnerService } from './services/python-runner.service';
-import { VideoService } from './entites/video/video.service';
 import { VideoModule } from './entites/video/video.module';
-import { UsersService } from './services/user.service';
 import { AuthController } from './controller/translate-video/auth.contorller';
 import { AuthService } from './services/auth.service';
+import { UserModule } from './entites/user/user.module';
 
 @Module({
   imports: [
-    VideoModule
+    VideoModule,
+    UserModule,
   ],
   controllers: [AppController, TranslateVideoController, AuthController],
-  providers: [AppService, PythonRunnerService, UsersService, AuthService],
-  exports: [UsersService]
+  providers: [AppService, PythonRunnerService, AuthService],
+  exports: []
 })
 export class AppModule {}

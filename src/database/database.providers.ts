@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { VideoEntity } from '../entites/video/video.entity';
+import { UserEntity } from 'src/entites/user/user.entity';
 
 export const databaseProviders = [
   {
@@ -12,7 +13,7 @@ export const databaseProviders = [
         username: 'user',
         password: '1',
         database: 'subtitr',
-        entities: [VideoEntity],
+        entities: [VideoEntity, UserEntity],
         synchronize: true,
       });
 
