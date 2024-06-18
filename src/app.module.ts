@@ -7,6 +7,7 @@ import { VideoModule } from './entites/video/video.module';
 import { AuthController } from './controller/translate-video/auth.contorller';
 import { AuthService } from './services/auth.service';
 import { UserModule } from './entites/user/user.module';
+import { QueueService } from "./services/queue2.service";
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { UserModule } from './entites/user/user.module';
     UserModule,
   ],
   controllers: [AppController, TranslateVideoController, AuthController],
-  providers: [AppService, PythonRunnerService, AuthService],
+  providers: [AppService, PythonRunnerService, AuthService, QueueService],
   exports: []
 })
 export class AppModule {}

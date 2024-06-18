@@ -13,6 +13,7 @@ export class VideoService {
   ) {}
   
   async insert(entity: VideoEntity): Promise<VideoEntity> {
+    console.log(entity);
     entity = this.videoRepository.create(entity);
     await this.videoRepository.save(entity);
     return entity;

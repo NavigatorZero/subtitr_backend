@@ -1,24 +1,29 @@
 import {
   Body,
-  Controller, Get, 
+  Controller,
+  Get,
   HttpException,
-  HttpStatus, Param,
+  HttpStatus,
+  Param,
   ParseIntPipe,
-  Post, Res, StreamableFile,
+  Post,
+  Res,
+  StreamableFile,
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage} from "multer";
+import { diskStorage } from 'multer';
 import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { v4 as uuidv4 } from 'uuid';
 import { PythonRunnerService } from '../../services/python-runner.service';
 import type { Response } from 'express';
-import { VideoService } from "../../entites/video/video.service";
-import { VideoEntity } from "../../entites/video/video.entity";
-import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
+import { VideoService } from '../../entites/video/video.service';
+import { VideoEntity } from '../../entites/video/video.entity';
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { UserService } from 'src/entites/user/user.service';
-const { placeOrder } = require('../../services/queue.service');
+import {QueueService} from "../../services/queue2.service";
 
 export const multerOptions: MulterOptions = {
   // Enable file size limits
@@ -59,36 +64,39 @@ export const multerOptions: MulterOptions = {
 @Controller('translate-video')
 export class TranslateVideoController {
   constructor(
-    private pythonRunnerService: PythonRunnerService,
     private videoService: VideoService,
     private userService: UserService,
+    private readonly queueService: QueueService,
   ) {}
   @Post('upload')
   @UseInterceptors(FilesInterceptor('file', 20, multerOptions))
   async uploadMultipleFiles(
     @UploadedFiles() files,
-    @Body() body
+    @Body() body,
   ): Promise<Array<VideoEntity>> {
+    console.log(files, body);
     const response = [];
     for (const file of files) {
-      const videoEntity = await this.videoService.insert({
+      const videoEntity1 = {
         name: file.originalname,
         path: file.path,
         path_new: `${process.cwd()}/static/with-subs/${file.filename}.mp4`,
         uuid: uuidv4(),
-        user: await this.userService.findOne(body.userId)
-      });
-      
-      placeOrder({
-        inputFile:videoEntity.path,
-        outputFile: videoEntity.path_new,
+        user: await this.userService.findOne(body.userId),
+      };
+
+      await this.queueService.addJob({
+        inputFile: videoEntity1.path,
+        outputFile: videoEntity1.path_new,
         speed: body.speed,
         position: body.position,
-        font: body.font
-      })
+        font: body.font,
+        entity: videoEntity1,
+      });
 
-      response.push(videoEntity);
+      response.push(videoEntity1);
     }
+
     return response;
   }
 
@@ -97,11 +105,8 @@ export class TranslateVideoController {
     @Param() params: any,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-
     const video = await this.videoService.findOne(params.id);
-    const file = createReadStream(
-      `${video.path_new}`,
-    );
+    const file = createReadStream(`${video.path_new}`);
     res.set({
       'Content-Type': 'video/mp4',
       'Content-Disposition': `attachment; filename="${video.name}"`,
@@ -110,7 +115,9 @@ export class TranslateVideoController {
   }
 
   @Get('list/:userId/all')
-  async getFileList(@Param('userId', new ParseIntPipe()) userId): Promise<VideoEntity[]> {
+  async getFileList(
+    @Param('userId', new ParseIntPipe()) userId,
+  ): Promise<VideoEntity[]> {
     return await this.videoService.findByUserId(userId);
   }
 }
