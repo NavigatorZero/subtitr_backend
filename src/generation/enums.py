@@ -9,12 +9,12 @@ ModelSize = {
     "base": "base",
     "small": "small",
     "medium": "medium",
-    'large': 'large',
+    "large": "large",
 }    
         
 Fonts = {
-    "arial": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/arialmt.ttf",
-    "bebas": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/Bebas_cirillic.ttf",
-    "futura": "/home/ubuntu/subtitr/subtitr_backend/src/generation/fonts/futuramdbt_bold.otf",
+    "arial": "/var/www/subtitr/subtitr_backend/src/generation/fonts/arialmt.ttf",
+    "bebas": "/var/www/subtitr/subtitr_backend/src/generation/fonts/Bebas_cirillic.ttf",
+    "futura": "/var/www/subtitr/subtitr_backend/src/generation/fonts/futuramdbt_bold.otf",
 }
     

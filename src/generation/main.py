@@ -118,7 +118,7 @@ class VideoTranscriber:
         while True:
             ret, frame = cap.read()
             if not ret:
-                print('error');
+                print('error')
                 break
 
             frame = frame[:, int(int(width - 1 / asp * height) / 2):width - int((width - 1 / asp * height) / 2)]

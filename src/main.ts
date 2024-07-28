@@ -6,11 +6,13 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'http://92.53.65.113/',
-      'http://92.53.65.113',
+      'http://5.188.159.164/',
+      'http://5.188.159.164',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
+
+  app.setGlobalPrefix('api');
 
   await app.listen(3000);
 }

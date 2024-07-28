@@ -1,4 +1,5 @@
 opencv-python
+whisper
 tqdm
 openai-whisper
 moviepy
