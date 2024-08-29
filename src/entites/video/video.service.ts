@@ -3,6 +3,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { VideoEntity } from './video.entity';
 import { Repository } from 'typeorm';
 import { UserService } from "../user/user.service";
+import * as fs from "node:fs";
 
 @Injectable()
 export class VideoService {
@@ -36,6 +37,14 @@ export class VideoService {
   }
 
   async remove(id: number): Promise<void> {
-    await this.videoRepository.delete(id);
+    const entity = await this.videoRepository.findOneBy({id: id});
+    try {
+      await fs.unlink(
+          `/var/www/subtitr/subtitr_backend/static/with-subs${entity.uuid}.mp4`,
+          () => console.log('removed'));
+    } catch (err) {
+      console.error(err);
+    }
+    await this.videoRepository.delete(entity.id);
   }
 }

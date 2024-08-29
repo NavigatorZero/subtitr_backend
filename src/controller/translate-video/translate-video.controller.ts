@@ -1,6 +1,6 @@
 import {
   Body,
-  Controller,
+  Controller, Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -9,7 +9,6 @@ import {
   Post,
   Res,
   StreamableFile,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -92,6 +91,7 @@ export class TranslateVideoController {
         position: body.position,
         font: body.font,
         entity: videoEntity1,
+        type: 'clipsai'
       });
 
       response.push(videoEntity1);
@@ -119,5 +119,26 @@ export class TranslateVideoController {
     @Param('userId', new ParseIntPipe()) userId,
   ): Promise<VideoEntity[]> {
     return await this.videoService.findByUserId(userId);
+  }
+
+  @Delete(':id')
+  async removeVideo(
+      @Param(':id', new ParseIntPipe()) videoId,
+  ): Promise<void> {
+    return await this.videoService.remove(videoId);
+  }
+
+
+  @Get('clip/:id')
+  async getFile(
+      @Param() params: any,
+      @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const file = createReadStream(`/var/www/subtitr/subtitr_backend/src/generation/clip${params.id}.mp4`);
+    res.set({
+      'Content-Type': 'video/mp4',
+      'Content-Disposition': `attachment; filename="clip${params.id}"`,
+    });
+    return new StreamableFile(file);
   }
 }

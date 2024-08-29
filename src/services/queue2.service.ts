@@ -31,6 +31,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
           job.data.speed,
           job.data.position,
           job.data.font,
+          job.data.type
         ],
       }).then((messages) => {
 

@@ -5,3 +5,5 @@ openai-whisper
 moviepy
 customtkinter
 get-video-properties
+yandexgpt-python
+clips
