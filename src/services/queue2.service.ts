@@ -23,7 +23,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     this.queue.process(5, (job, done) => {
       console.log(`Job ${job.id} has been started`);
       PythonShell.run(`${process.cwd()}/src/generation/main.py`, {
-        pythonPath: '/var/www/subtitr/subtitr_backend/src/generation/.venv/bin/python',
+        pythonPath: `${process.cwd()}/src/generation/venv/bin/python`,
         pythonOptions: ['-u'],
         args: [
           job.data.inputFile,
@@ -39,7 +39,8 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
         console.log('finished', messages, job.id);
         done();
-      });
+      },
+          (err)=> console.log(err));
     });
 
     this.queue.on('error', (err) => {

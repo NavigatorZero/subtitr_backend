@@ -13,8 +13,8 @@ ModelSize = {
 }    
         
 Fonts = {
-    "arial": "/var/www/subtitr/subtitr_backend/src/generation/fonts/arialmt.ttf",
-    "bebas": "/var/www/subtitr/subtitr_backend/src/generation/fonts/Bebas_cirillic.ttf",
-    "futura": "/var/www/subtitr/subtitr_backend/src/generation/fonts/futuramdbt_bold.otf",
+    "arial": "/root/subtitr_backend/src/generation/fonts/arialmt.ttf",
+    "bebas": "/root/subtitr_backend/src/generation/fonts/Bebas_cirillic.ttf",
+    "futura": "/root/subtitr_backend/src/generation/fonts/futuramdbt_bold.otf",
 }
     

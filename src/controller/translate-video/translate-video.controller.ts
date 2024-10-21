@@ -16,7 +16,6 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { v4 as uuidv4 } from 'uuid';
-import { PythonRunnerService } from '../../services/python-runner.service';
 import type { Response } from 'express';
 import { VideoService } from '../../entites/video/video.service';
 import { VideoEntity } from '../../entites/video/video.entity';
@@ -50,7 +49,6 @@ export const multerOptions: MulterOptions = {
     // Destination storage path details
     destination: (req: any, file: any, cb: any) => {
       const uploadPath = process.cwd() + '/static/videos';
-      console.log(process.cwd() + '/static/videos');
       // Create folder if doesn't exist
       if (!existsSync(uploadPath)) {
         mkdirSync(uploadPath);
@@ -73,10 +71,9 @@ export class TranslateVideoController {
     @UploadedFiles() files,
     @Body() body,
   ): Promise<Array<VideoEntity>> {
-    console.log(files, body);
     const response = [];
     for (const file of files) {
-      const videoEntity1 = {
+      const videoEntity = {
         name: file.originalname,
         path: file.path,
         path_new: `${process.cwd()}/static/with-subs/${file.filename}.mp4`,
@@ -85,16 +82,16 @@ export class TranslateVideoController {
       };
 
       await this.queueService.addJob({
-        inputFile: videoEntity1.path,
-        outputFile: videoEntity1.path_new,
+        inputFile: videoEntity.path,
+        outputFile: videoEntity.path_new,
         speed: body.speed,
         position: body.position,
         font: body.font,
-        entity: videoEntity1,
-        type: 'clipsai'
+        entity: videoEntity,
+        type: 'subtitles'
       });
 
-      response.push(videoEntity1);
+      response.push(videoEntity);
     }
 
     return response;
@@ -127,14 +124,14 @@ export class TranslateVideoController {
   ): Promise<void> {
     return await this.videoService.remove(videoId);
   }
-
+   
 
   @Get('clip/:id')
-  async getFile(
+  async getClipFile(
       @Param() params: any,
       @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const file = createReadStream(`/var/www/subtitr/subtitr_backend/src/generation/clip${params.id}.mp4`);
+    const file = createReadStream(`${process.cwd()}/src/generation/clip${params.id}.mp4`);
     res.set({
       'Content-Type': 'video/mp4',
       'Content-Disposition': `attachment; filename="clip${params.id}"`,

@@ -6,4 +6,5 @@ moviepy
 customtkinter
 get-video-properties
 yandexgpt-python
-clips
+clipsai
+whisperx

@@ -1,8 +1,8 @@
 # compiled output
 /dist
 /node_modules
-/static/videos
-/static/with-subs
+/static/videos/
+/static/with-subs/
 /build
 
 # Logs

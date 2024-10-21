@@ -98,7 +98,7 @@ class VideoTranscriber:
                 lines.append(line_array)
                 self.text_array.append(line_array)
 
-        chatGpt(''.join(str(x) for x in self.text_array))
+       # chatGpt(''.join(str(x) for x in self.text_array))
         cap.release()
         print('Transcription complete')
 
@@ -205,7 +205,7 @@ def ProcessVideo():
 
         transcriber.transcribe_video()
 
-        #transcriber.create_video(output_video_path)
+        transcriber.create_video(output_video_path)
         processing = False
         exit()
 
@@ -351,10 +351,10 @@ def main():
     font = Fonts.get(sys.argv[5], 'arial')
     type = sys.argv[6]
 
-    if(type === 'subtitles'):
+    if type == 'subtitles':
         StartVideoProcess()
 
-    if(type ==='clipsai'):
+    if type == 'clipsai':
         startClipsAi()
 
 if __name__ == "__main__":
